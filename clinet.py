@@ -15,47 +15,49 @@ def recv_exactly(sock, n):
     return buf
 
 
-def send_rinex(host: str, port: int, rover_path: str, base_path: str):
-    for path in [rover_path, base_path]:
-        if not os.path.isfile(path):
-            print(f"Ошибка: файл не найден — {path}")
+def send_rinex(host: str, port: int, rover_file: str, base_file: str):
+    files_to_send = [rover_file, base_file]
+    
+    for filepath in files_to_send:
+        if not os.path.isfile(filepath):
+            print(f"Ошибка: файл не найден — {filepath}")
             return
 
-    # Читаем файлы
-    with open(rover_path, 'rb') as f:
-        rover_data = f.read()
-    rover_name = os.path.basename(rover_path)
-
-    with open(base_path, 'rb') as f:
-        base_data = f.read()
-    base_name = os.path.basename(base_path)
-
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
 
-          # Отправка файла базы
-        s.sendall(struct.pack('>I', len(base_name)))
-        s.sendall(base_name.encode('utf-8'))
-        s.sendall(struct.pack('>Q', len(base_data)))
-        s.sendall(base_data)
+         #Отправка количества файлов (2)
+        s.sendall(struct.pack('>I', 2))
 
-        # Отправка файла ровера
-        s.sendall(struct.pack('>I', len(rover_name)))
-        s.sendall(rover_name.encode('utf-8'))
-        s.sendall(struct.pack('>Q', len(rover_data)))
-        s.sendall(rover_data)
+        #Отправка двух файлов
+        for filepath in files_to_send:
+            with open(filepath, 'rb') as f:
+                file_data = f.read()
+            filename = os.path.basename(filepath)
 
-        #Приём ответа
+        #Отправка файла
+            s.sendall(struct.pack('>I', len(filename)))      
+            s.sendall(filename.encode('utf-8'))             
+            s.sendall(struct.pack('>Q', len(file_data)))     
+            s.sendall(file_data)                             
+
+        # --- Приём ответа ---
+        # Читаем первые 4 байта для определения типа ответа
         prefix = recv_exactly(s, 4)
 
         if prefix == b"OK::":
+            # Успех: читаем 8 байт — длину результата
             size_bytes = recv_exactly(s, 8)
             result_size = struct.unpack('>Q', size_bytes)[0]
+
+            # Читаем сам результат (ровно result_size байт)
             result = recv_exactly(s, result_size)
+
             print("\n=== Результат обработки ===")
             print(result.decode('utf-8'))
 
-        elif prefix.startswith(b"ERR"):
+        elif prefix.startswith(b"ERR"):  # например, b"ERRO" от "ERROR:..."
+            # Дочитываем остаток сообщения об ошибке
             rest = s.recv(1024)
             full_error = (prefix + rest).decode('utf-8', errors='replace')
             print("Сервер вернул ошибку:", full_error)
@@ -64,8 +66,13 @@ def send_rinex(host: str, port: int, rover_path: str, base_path: str):
             print("Некорректный ответ от сервера:", repr(prefix))
 
 
+
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print("Использование: python client.py <путь_к_роверу.obs> <путь_к_базе.obs>")
+        print("Использование: python client.py <rover_file.obs> <base_file.obs>")
+        print("  rover_file.obs - файл наблюдений подвижного приемника")
+        print("  base_file.obs  - файл наблюдений базовой станции")
         sys.exit(1)
-    send_rinex('localhost', 9999, sys.argv[1], sys.argv[2])
+    rover_file = sys.argv[1]
+    base_file = sys.argv[2]
+send_rinex('ip', 9999, rover_file, base_file)
