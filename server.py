@@ -73,7 +73,7 @@ def extract_date_from_rinex(rnx_path: str) -> date:
 
 def run_rtklib_kinematic(rover_file: str, base_file: str, nav_file: str, out_file: str):
     """Запускает rnx2rtkp в режиме Rel"""
-    cmd = ["/UUsers/sergeidolin/BG.41/RTKLIB/app/consapp/rnx2rtkp/gcc/rnx2rtkp  ", "-p", "3", "-o", out_file, rover_file, base_file,  nav_file]
+    cmd = ["/Users/sergeidolin/BG.41/RTKLIB/app/consapp/rnx2rtkp/gcc/rnx2rtkp  ", "-p", "3", "-o", out_file, rover_file, base_file,  nav_file]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"RTKLIB ошибка:\n{result.stderr}")
