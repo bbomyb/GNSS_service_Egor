@@ -131,7 +131,7 @@ def handle_client(conn):
 
         # Запускаем RTKLIB напрямую
         result_path = rover_path.replace('.obs', '.pos')
-        run_rtklib_kinematic(rover_path, base_path,eph_path, result_path)
+        run_rtklib_static(rover_path, base_path,eph_path, result_path)
 
         # Отправляем результат клиенту
         # Читаем .pos и извлекаем последнюю строку с решением
