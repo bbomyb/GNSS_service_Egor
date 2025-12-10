@@ -56,7 +56,7 @@ def send_rinex(host: str, port: int, rover_file: str, base_file: str):
             print("\n=== Результат обработки ===")
             print(result.decode('utf-8'))
 
-        elif prefix.startswith(b"ERR"):  # например, b"ERRO" от "ERROR:..."
+        elif prefix.startswith(b"ERR"): 
             # Дочитываем остаток сообщения об ошибке
             rest = s.recv(1024)
             full_error = (prefix + rest).decode('utf-8', errors='replace')
