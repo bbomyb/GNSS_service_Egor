@@ -17,29 +17,29 @@ def recv_exactly(sock, n):
 
 def send_rinex(host: str, port: int, rover_file: str, base_file: str):
     files_to_send = [rover_file, base_file]
-    
+
     for filepath in files_to_send:
         if not os.path.isfile(filepath):
             print(f"Ошибка: файл не найден — {filepath}")
             return
 
-   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((host, port))
 
-         #Отправка количества файлов (2)
+         # --- Отправка количества файлов (2) ---
         s.sendall(struct.pack('>I', 2))
 
-        #Отправка двух файлов
+        # --- Отправка двух файлов ---
         for filepath in files_to_send:
             with open(filepath, 'rb') as f:
                 file_data = f.read()
             filename = os.path.basename(filepath)
 
-        #Отправка файла
-            s.sendall(struct.pack('>I', len(filename)))      
-            s.sendall(filename.encode('utf-8'))             
-            s.sendall(struct.pack('>Q', len(file_data)))     
-            s.sendall(file_data)                             
+        # --- Отправка файла ---
+            s.sendall(struct.pack('>I', len(filename)))      # длина имени (4 байта)
+            s.sendall(filename.encode('utf-8'))              # имя файла
+            s.sendall(struct.pack('>Q', len(file_data)))     # размер файла (8 байт)
+            s.sendall(file_data)                             # содержимое
 
         # --- Приём ответа ---
         # Читаем первые 4 байта для определения типа ответа
@@ -56,7 +56,7 @@ def send_rinex(host: str, port: int, rover_file: str, base_file: str):
             print("\n=== Результат обработки ===")
             print(result.decode('utf-8'))
 
-        elif prefix.startswith(b"ERR"): 
+        elif prefix.startswith(b"ERR"):  # например, b"ERRO" от "ERROR:..."
             # Дочитываем остаток сообщения об ошибке
             rest = s.recv(1024)
             full_error = (prefix + rest).decode('utf-8', errors='replace')
