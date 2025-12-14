@@ -178,7 +178,7 @@ def handle_client(conn):
 def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(('', 9999))
+    server.bind(('ip', 9999))
     server.listen(5)
     print("Сервер запущен на порту 9999")
     try:
