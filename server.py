@@ -107,7 +107,7 @@ def handle_client(conn):
             file_size = struct.unpack('>Q', recv_exactly(conn, 8))[0]
 
          # Сохраняем RINEX во временный файл
-            suffix = '.rover.obs' if i == 0 else '.base.obs'
+            suffix = '.25o' if i == 0 else '.25o'
             with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as f:
                 file_path = f.name
                 total = 0
@@ -130,7 +130,7 @@ def handle_client(conn):
         eph_path = download_brdc_from_bkg(obs_date, out_dir=os.path.dirname(rover_path))
 
         # Запускаем RTKLIB напрямую
-        result_path = rover_path.replace('.obs', '.pos')
+        result_path = rover_path.replace('.25o', '.pos')
         run_rtklib_static(rover_path, base_path,eph_path, result_path)
 
         # Отправляем результат клиенту
